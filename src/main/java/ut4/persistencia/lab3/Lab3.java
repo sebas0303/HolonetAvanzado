@@ -6,64 +6,40 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
 public class Lab3 {
-
     public static void main(String[] args) {
-        // 1. Apertura y gestión automática de SessionFactory y Session con try-with-resources
-        try (SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
-             Session session = sessionFactory.openSession()) {
+        // La sesión se abre y se cierra automáticamente al salir del try
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
 
             HoloNetControl control = new HoloNetControl(session);
 
-            // =========================================================================
-            // PRUEBA DESAFÍO 1: Sensor Táctico (INNER JOIN)
-            // =========================================================================
-            String bandoBuscado = "Imperio";
-            System.out.println("\n================ [DESAFÍO 1: SENSOR TÁCTICO - BANDO: " + bandoBuscado.toUpperCase() + "] ================");
-            List<Nave> navesImperiales = control.obtenerNavesPorBandoPlaneta(bandoBuscado);
+            // Desafío 1: Sensor Táctico
+            System.out.println("\n--- DESAFÍO 1: NAVES IMPERIALES ---");
+            List<Nave> navesImperiales = control.obtenerNavesPorBandoPlaneta("Imperio");
+            navesImperiales.forEach(n -> 
+                System.out.printf("Nave: %-25s | Estado: %s%n", n.getNombre(), n.getEstadoSistema())
+            );
 
-            for (Nave n : navesImperiales) {
-                System.out.printf(" -> Nave: %-26s | Modelo: %-18s | Estado: %s%n",
-                        n.getNombre(), n.getModelo(), n.getEstadoSistema());
-            }
+            // Desafío 2: FETCH JOIN
+            System.out.println("\n--- DESAFÍO 2: FLOTA CRÍTICA ---");
+            List<Nave> criticas = control.obtenerFlotaCriticaConPlaneta();
+            criticas.forEach(n -> {
+                String origen = (n.getPlanetaOrigen() != null) ? n.getPlanetaOrigen().getNombre() : "Sin asignar";
+                System.out.printf("Nave: %-25s | Origen: %s%n", n.getNombre(), origen);
+            });
 
-            // =========================================================================
-            // PRUEBA DESAFÍO 2: Mitigación N+1 (FETCH JOIN)
-            // =========================================================================
-            System.out.println("\n================ [DESAFÍO 2: FLOTA EN ESTADO CRÍTICO (FETCH JOIN)] ================");
-            List<Nave> flotaCritica = control.obtenerFlotaCriticaConPlaneta();
-
-            for (Nave n : flotaCritica) {
-                // Accedemos a n.getPlanetaOrigen().getNombre() sin disparar consultas SQL extra
-                String nombrePlaneta = (n.getPlanetaOrigen() != null)
-                        ? n.getPlanetaOrigen().getNombre()
-                        : "Sin planeta";
-                String afiliacion = (n.getPlanetaOrigen() != null)
-                        ? n.getPlanetaOrigen().getAfiliacion()
-                        : "N/A";
-
-                System.out.printf(" -> [ALERTA CRÍTICA] Nave: %-25s | Origen: %-10s (%s)%n",
-                        n.getNombre(), nombrePlaneta, afiliacion);
-            }
-
-            // =========================================================================
-            // PRUEBA DESAFÍO 3: Reporte del Alistamiento (LEFT JOIN y Proyecciones)
-            // =========================================================================
-            System.out.println("\n================ [DESAFÍO 3: REPORTE DE PLANETAS ASIGNADOS (LEFT JOIN)] ================");
+            // Desafío 3: LEFT JOIN
+            System.out.println("\n--- DESAFÍO 3: REPORTE GENERAL ---");
             List<Object[]> reporte = control.obtenerReportePlanetasAsignados();
-
-            System.out.printf(" %-28s | %-20s%n", "NOMBRE DE LA NAVE", "PLANETA DE ORIGEN");
-            System.out.println("------------------------------------------------------------");
-            for (Object[] fila : reporte) {
-                String nombreNave = (String) fila[0];
-                String nombrePlaneta = (String) fila[1]; // Será null si la nave no tiene planeta asignado
-
-                System.out.printf(" %-28s | %-20s%n", nombreNave, nombrePlaneta);
-            }
-            System.out.println("============================================================\n");
+            reporte.forEach(fila -> 
+                System.out.printf("%-25s -> %s%n", fila[0], fila[1])
+            );
 
         } catch (Exception e) {
-            System.err.println("Error en las transmisiones de la HoloNet: " + e.getMessage());
+            System.err.println("Error durante la ejecución: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            // Liberamos los recursos globales de la conexión
+            HibernateUtil.shutdown();
         }
     }
 }
