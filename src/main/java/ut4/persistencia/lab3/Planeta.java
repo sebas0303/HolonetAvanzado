@@ -1,12 +1,6 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package ut4.persistencia.lab3;
 
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "planetas")
@@ -14,58 +8,50 @@ public class Planeta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String nombrePlaneta;
-    private String sectorGalactico;
-
-    // Relación bidireccional (Lado inverso)
-    @OneToMany(mappedBy = "planeta", cascade = CascadeType.ALL)
-    private List<Nave> naves = new ArrayList<>();
+    @Column(name = "planeta_id")
+    private Integer planetaID;
+    
+    @Column(name = "nombre", length = 100, nullable = false, unique = true)
+    private String nombre;
+    
+    @Column(name = "afiliacion", length = 50)
+    private String afiliacion = "Neutral";
 
     public Planeta() {}
 
-    public Planeta(Long id, String nombrePlaneta, String sectorGalactico) {
-        this.id = id;
-        this.nombrePlaneta = nombrePlaneta;
-        this.sectorGalactico = sectorGalactico;
-    }
-
-    // EL MÉTODO HELPER (Paso 2)
-    public void agregarNave(Nave nave) {
-        this.naves.add(nave);
-        nave.setPlaneta(this); // Sincroniza el lado propietario
+    public Planeta(String nombre, String afiliacion) {
+        this.nombre = nombre;
+        this.afiliacion = afiliacion;
     }
 
     // Getters y Setters...
-    public Long getId() { 
-        return id; 
-    }
-    
-    public String getNombrePlaneta() { 
-        return nombrePlaneta; 
+
+    public Integer getPlanetaID() {
+        return planetaID;
     }
 
-    public String getSectorGalactico() {
-        return sectorGalactico;
+    public void setPlanetaID(Integer planetaID) {
+        this.planetaID = planetaID;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public String getNombre() {
+        return nombre;
     }
 
-    public void setNombrePlaneta(String nombrePlaneta) {
-        this.nombrePlaneta = nombrePlaneta;
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
     }
 
-    public void setSectorGalactico(String sectorGalactico) {
-        this.sectorGalactico = sectorGalactico;
+    public String getAfiliacion() {
+        return afiliacion;
     }
 
-    public void setNaves(List<Nave> naves) {
-        this.naves = naves;
+    public void setAfiliacion(String afiliacion) {
+        this.afiliacion = afiliacion;
     }
-    
-    public List<Nave> getNaves() { return naves; }
 
-    
+    @Override
+    public String toString() {
+        return "Planeta{" + "planetaID=" + planetaID + ", nombre=" + nombre + ", afiliacion=" + afiliacion + '}';
+    }
 }
